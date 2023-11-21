@@ -1,0 +1,1 @@
+flutter drive --driver=test_driver/test_driver.dart --target=test/todo_list_test.dart
