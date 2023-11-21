@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(MyApp());
@@ -33,6 +34,12 @@ class _TodoListScreenState extends State<TodoListScreen> {
   List<Task> tasks = [];
 
   @override
+  void initState() {
+    super.initState();
+    _loadTasks();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -50,6 +57,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
                     onChanged: (value) {
                       setState(() {
                         tasks[index].isCompleted = value!;
+                        _saveTasks(); // Save tasks after modification
                       });
                     },
                   ),
@@ -64,7 +72,10 @@ class _TodoListScreenState extends State<TodoListScreen> {
                   trailing: IconButton(
                     icon: Icon(Icons.delete),
                     onPressed: () {
-                      _deleteTask(index);
+                      setState(() {
+                        tasks.removeAt(index);
+                        _saveTasks(); // Save tasks after modification
+                      });
                     },
                   ),
                 );
@@ -73,11 +84,22 @@ class _TodoListScreenState extends State<TodoListScreen> {
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton(
-              onPressed: () {
-                _addTask(context);
-              },
-              child: Text('Add Task'),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    _addTask(context);
+                  },
+                  child: Text('Add Task'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    _clearCompletedTasks(context);
+                  },
+                  child: Text('Clear Completed'),
+                ),
+              ],
             ),
           ),
         ],
@@ -86,16 +108,16 @@ class _TodoListScreenState extends State<TodoListScreen> {
   }
 
   void _addTask(BuildContext context) async {
-    Task? newTask = await showDialog<Task>(
+    String? newTask = await showDialog<String>(
       context: context,
       builder: (BuildContext context) {
-        Task task = Task('', false); // Initialize with an empty task
+        String task = ''; // Initialize with an empty string
 
         return AlertDialog(
           title: Text('Add Task'),
           content: TextField(
             onChanged: (value) {
-              task.text = value; // Update the task text as the user types
+              task = value; // Update the task text as the user types
             },
           ),
           actions: [
@@ -116,16 +138,60 @@ class _TodoListScreenState extends State<TodoListScreen> {
       },
     );
 
-    if (newTask != null && newTask.text.isNotEmpty) {
+    if (newTask != null && newTask.isNotEmpty) {
       setState(() {
-        tasks.add(newTask);
+        tasks.add(Task(newTask, false));
+        _saveTasks(); // Save tasks after modification
       });
     }
   }
 
-  void _deleteTask(int index) {
-    setState(() {
-      tasks.removeAt(index);
-    });
+  void _clearCompletedTasks(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Clear Completed Tasks?'),
+          content: Text('Are you sure you want to clear all completed tasks?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  tasks.removeWhere((task) => task.isCompleted);
+                  _saveTasks(); // Save tasks after modification
+                });
+                Navigator.of(context).pop();
+              },
+              child: Text('Clear'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Load tasks from shared preferences
+  Future<void> _loadTasks() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String>? taskList = prefs.getStringList('tasks');
+
+    if (taskList != null) {
+      setState(() {
+        tasks = taskList.map((task) => Task(task, false)).toList();
+      });
+    }
+  }
+
+  // Save tasks to shared preferences
+  void _saveTasks() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String> taskList = tasks.map((task) => task.text).toList();
+    prefs.setStringList('tasks', taskList);
   }
 }
