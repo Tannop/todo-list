@@ -45,7 +45,7 @@ migrate_working_dir/
 # JetBrains IDEs
 .idea/
 
-# Visual Studio Code
+# Visual Studio Codegi
 .vscode/
 
 # macOS
