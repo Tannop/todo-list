@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 // import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
+import 'package:image_picker/image_picker.dart';
 
 void main() {
   runApp(MyApp());
@@ -117,7 +118,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.end,
         children: [
           Text('Sort By: '),
           DropdownButton<String>(
@@ -146,13 +147,36 @@ class _TodoListScreenState extends State<TodoListScreen> {
       itemCount: filteredTasks.length,
       itemBuilder: (context, index) {
         Task task = filteredTasks[index];
-        return ListTile(
-          title: Text(task.title),
-          subtitle: Text(task.description),
-          trailing: Text('Status: ${task.status}'),
-          onTap: () {
-            _updateTask(context, task);
-          },
+        return Card(
+          child: ListTile(
+            title: Text(task.title),
+            subtitle: Text(task.description),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Changed status bar update
+                //Text('Status: ${task.status}'),
+                ElevatedButton(
+                  onPressed: () {
+                    _toggleStatus(task);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    primary: task.status == 'IN_PROGRESS'
+                        ? Colors.red
+                        : Colors.green,
+                    onPrimary: Colors.white,
+                  ),
+                  child: Text(
+                    task.status == 'IN_PROGRESS' ? 'Complete' : 'In Progress',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+            onTap: () {
+              _updateTask(context, task);
+            },
+          ),
         );
       },
     );
@@ -181,130 +205,6 @@ class _TodoListScreenState extends State<TodoListScreen> {
     }
 
     return filteredTasks;
-  }
-
-  void _updateTask(BuildContext context, Task task) async {
-    Task? updatedTask = await showDialog<Task>(
-      context: context,
-      builder: (BuildContext context) {
-        String title = task.title;
-        String description = task.description;
-        DateTime createdAt = task.createdAt;
-        String image = task.image;
-        String status = task.status;
-
-        return AlertDialog(
-          title: Text('Update Task'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                maxLength: 100,
-                decoration: InputDecoration(labelText: 'Title'),
-                controller: TextEditingController(text: title),
-                onChanged: (value) {
-                  title = value;
-                },
-              ),
-              TextField(
-                decoration: InputDecoration(labelText: 'Description'),
-                controller: TextEditingController(text: description),
-                onChanged: (value) {
-                  description = value;
-                },
-              ),
-              ListTile(
-                title: Text('Date'),
-                subtitle: Text(createdAt.toLocal().toString()),
-                onTap: () async {
-                  DateTime? pickedDate = await showDatePicker(
-                    context: context,
-                    initialDate: createdAt,
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime(2101),
-                  );
-
-                  if (pickedDate != null) {
-                    setState(() {
-                      createdAt = pickedDate;
-                    });
-                  }
-                },
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  // Implement logic to select or input an image
-                },
-                child: Text('Select Image'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    status =
-                        status == 'IN_PROGRESS' ? 'COMPLETED' : 'IN_PROGRESS';
-                  });
-                },
-                style: ElevatedButton.styleFrom(
-                  primary: status == 'IN_PROGRESS' ? Colors.red : Colors.green,
-                  onPrimary: Colors.white,
-                ),
-                child: Text(
-                  status == 'IN_PROGRESS' ? 'In Progress' : 'Completed',
-                  style: TextStyle(color: Colors.white),
-                ),
-              )
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(null); // Return null if canceled
-              },
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                try {
-                  // Validate fields before updating the task
-                  _validateTaskFields(title, createdAt, status, image);
-                  Task updatedTask = Task(
-                    id: task.id,
-                    title: title,
-                    description: description,
-                    createdAt: createdAt,
-                    image: image,
-                    status: status,
-                  );
-                  Navigator.of(context).pop(updatedTask);
-                } catch (e) {
-                  _showErrorSnackBar(e.toString());
-                }
-              },
-              child: Text('Update'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (updatedTask != null) {
-      setState(() {
-        tasks.removeWhere((t) => t.id == task.id);
-        tasks.add(updatedTask);
-        _saveTasks(); // Save tasks after modification
-      });
-    }
-  }
-
-  void _validateTaskFields(
-      String title, DateTime createdAt, String status, String image) {
-    if (title.isEmpty || title.length > 100) {
-      throw 'Title must not be empty and should be less than 100 characters.';
-    }
-    //Here
-    // Add additional validations for other fields
-    // Ensure that createdAt is in the correct format, image is Base64 encoded, etc.
-    // Handle errors by throwing exceptions with appropriate messages.
   }
 
   void _addTask(BuildContext context) async {
@@ -355,8 +255,15 @@ class _TodoListScreenState extends State<TodoListScreen> {
                 },
               ),
               ElevatedButton(
-                onPressed: () {
-                  // Implement logic to select or input an image
+                onPressed: () async {
+                  XFile? pickedImage = await ImagePicker()
+                      .pickImage(source: ImageSource.gallery);
+
+                  if (pickedImage != null) {
+                    setState(() {
+                      image = pickedImage.path;
+                    });
+                  }
                 },
                 child: Text('Select Image'),
               ),
@@ -433,6 +340,137 @@ class _TodoListScreenState extends State<TodoListScreen> {
         _saveTasks(); // Save tasks after modification
       });
     }
+  }
+
+  void _updateTask(BuildContext context, Task task) async {
+    Task? updatedTask = await showDialog<Task>(
+      context: context,
+      builder: (BuildContext context) {
+        String title = task.title;
+        String description = task.description;
+        DateTime createdAt = task.createdAt;
+        String image = task.image;
+        String status = task.status;
+
+        return AlertDialog(
+          title: Text('Update Task'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                maxLength: 100,
+                decoration: InputDecoration(labelText: 'Title'),
+                controller: TextEditingController(text: title),
+                onChanged: (value) {
+                  title = value;
+                },
+              ),
+              TextField(
+                decoration: InputDecoration(labelText: 'Description'),
+                controller: TextEditingController(text: description),
+                onChanged: (value) {
+                  description = value;
+                },
+              ),
+              ListTile(
+                title: Text('Date'),
+                subtitle: Text(createdAt.toLocal().toString()),
+                onTap: () async {
+                  DateTime? pickedDate = await showDatePicker(
+                    context: context,
+                    initialDate: createdAt,
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2101),
+                  );
+
+                  if (pickedDate != null) {
+                    setState(() {
+                      createdAt = pickedDate;
+                    });
+                  }
+                },
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  XFile? pickedImage = await ImagePicker()
+                      .pickImage(source: ImageSource.gallery);
+
+                  if (pickedImage != null) {
+                    setState(() {
+                      image = pickedImage.path;
+                    });
+                  }
+                },
+                child: Text('Select Image'),
+              ),
+              // ElevatedButton(
+              //   onPressed: () {
+              //     setState(() {
+              //       status =
+              //           status == 'IN_PROGRESS' ? 'COMPLETED' : 'IN_PROGRESS';
+              //     });
+              //   },
+              //   style: ElevatedButton.styleFrom(
+              //     primary: status == 'IN_PROGRESS' ? Colors.red : Colors.green,
+              //     onPrimary: Colors.white,
+              //   ),
+              //   child: Text(
+              //     status == 'IN_PROGRESS' ? 'In Progress' : 'Completed',
+              //     style: TextStyle(color: Colors.white),
+              //   ),
+              // )
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(null); // Return null if canceled
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                try {
+                  // Validate fields before updating the task
+                  _validateTaskFields(title, createdAt, status, image);
+                  Task updatedTask = Task(
+                    id: task.id,
+                    title: title,
+                    description: description,
+                    createdAt: createdAt,
+                    image: image,
+                    status: status,
+                  );
+                  Navigator.of(context).pop(updatedTask);
+                } catch (e) {
+                  _showErrorSnackBar(e.toString());
+                }
+              },
+              child: Text('Update'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (updatedTask != null) {
+      setState(() {
+        tasks.removeWhere((t) => t.id == task.id);
+        tasks.add(updatedTask);
+        _saveTasks(); // Save tasks after modification
+      });
+    }
+  }
+
+  void _validateTaskFields(
+      String title, DateTime createdAt, String status, String image) {
+    if (title.isEmpty || title.length > 100) {
+      throw 'Title must not be empty and should be less than 100 characters.';
+    }
+    //Here
+    // Add additional validations for other fields
+    // Ensure that createdAt is in the correct format, image is Base64 encoded, etc.
+    // Handle errors by throwing exceptions with appropriate messages.
   }
 
   void _clearCompletedTasks(BuildContext context) {
@@ -544,5 +582,12 @@ class _TodoListScreenState extends State<TodoListScreen> {
         duration: Duration(seconds: 2),
       ),
     );
+  }
+
+  void _toggleStatus(Task task) {
+    setState(() {
+      task.status = task.status == 'IN_PROGRESS' ? 'COMPLETED' : 'IN_PROGRESS';
+      _saveTasks(); // Save tasks after modifying the status
+    });
   }
 }
