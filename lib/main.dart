@@ -354,72 +354,58 @@ class _TodoListScreenState extends State<TodoListScreen> {
 
         return AlertDialog(
           title: Text('Update Task'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                maxLength: 100,
-                decoration: InputDecoration(labelText: 'Title'),
-                controller: TextEditingController(text: title),
-                onChanged: (value) {
-                  title = value;
-                },
-              ),
-              TextField(
-                decoration: InputDecoration(labelText: 'Description'),
-                controller: TextEditingController(text: description),
-                onChanged: (value) {
-                  description = value;
-                },
-              ),
-              ListTile(
-                title: Text('Date'),
-                subtitle: Text(createdAt.toLocal().toString()),
-                onTap: () async {
-                  DateTime? pickedDate = await showDatePicker(
-                    context: context,
-                    initialDate: createdAt,
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime(2101),
-                  );
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  maxLength: 100,
+                  decoration: InputDecoration(labelText: 'Title'),
+                  controller: TextEditingController(text: title),
+                  onChanged: (value) {
+                    title = value;
+                  },
+                ),
+                TextField(
+                  decoration: InputDecoration(labelText: 'Description'),
+                  controller: TextEditingController(text: description),
+                  onChanged: (value) {
+                    description = value;
+                  },
+                ),
+                ListTile(
+                  title: Text('Date'),
+                  subtitle: Text(createdAt.toLocal().toString()),
+                  onTap: () async {
+                    DateTime? pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: createdAt,
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2101),
+                    );
 
-                  if (pickedDate != null) {
-                    setState(() {
-                      createdAt = pickedDate;
-                    });
-                  }
-                },
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  XFile? pickedImage = await ImagePicker()
-                      .pickImage(source: ImageSource.gallery);
+                    if (pickedDate != null) {
+                      setState(() {
+                        createdAt = pickedDate;
+                      });
+                    }
+                  },
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    XFile? pickedImage = await ImagePicker()
+                        .pickImage(source: ImageSource.gallery);
 
-                  if (pickedImage != null) {
-                    setState(() {
-                      image = pickedImage.path;
-                    });
-                  }
-                },
-                child: Text('Select Image'),
-              ),
-              // ElevatedButton(
-              //   onPressed: () {
-              //     setState(() {
-              //       status =
-              //           status == 'IN_PROGRESS' ? 'COMPLETED' : 'IN_PROGRESS';
-              //     });
-              //   },
-              //   style: ElevatedButton.styleFrom(
-              //     primary: status == 'IN_PROGRESS' ? Colors.red : Colors.green,
-              //     onPrimary: Colors.white,
-              //   ),
-              //   child: Text(
-              //     status == 'IN_PROGRESS' ? 'In Progress' : 'Completed',
-              //     style: TextStyle(color: Colors.white),
-              //   ),
-              // )
-            ],
+                    if (pickedImage != null) {
+                      setState(() {
+                        image = pickedImage.path;
+                      });
+                    }
+                  },
+                  child: Text('Select Image'),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
