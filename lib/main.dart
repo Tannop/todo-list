@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 
 void main() {
   runApp(MyApp());
@@ -147,6 +148,41 @@ class _TodoListScreenState extends State<TodoListScreen> {
       itemCount: filteredTasks.length,
       itemBuilder: (context, index) {
         Task task = filteredTasks[index];
+        // Text complete and inprogress
+        // return Card(
+        //   child: ListTile(
+        //     title: Text(task.title),
+        //     subtitle: Text(task.description),
+        //     trailing: Row(
+        //       mainAxisSize: MainAxisSize.min,
+        //       children: [
+        //         // Changed status bar update
+        //         const Text('Mark as: '),
+        //         ElevatedButton(
+        //           onPressed: () {
+        //             _toggleStatus(task);
+        //           },
+        //           style: ElevatedButton.styleFrom(
+        //             foregroundColor: Colors.white,
+        //             backgroundColor: task.status == 'IN_PROGRESS'
+        //                 ? Colors.red
+        //                 : Colors.green,
+        //             padding: EdgeInsets.symmetric(
+        //                 horizontal: 10,
+        //                 vertical: 5), // Adjust padding as needed
+        //           ),
+        //           child: Text(
+        //             task.status == 'IN_PROGRESS' ? 'Complete' : 'In Progress',
+        //             style: TextStyle(fontSize: 12),
+        //           ),
+        //         ),
+        //       ],
+        //     ),
+        //     onTap: () {
+        //       _updateTask(context, task);
+        //     },
+        //   ),
+        // );
         return Card(
           child: ListTile(
             title: Text(task.title),
@@ -154,22 +190,13 @@ class _TodoListScreenState extends State<TodoListScreen> {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Changed status bar update
-                //Text('Status: ${task.status}'),
-                ElevatedButton(
-                  onPressed: () {
+                // Changed status bar update to Checkbox
+                const Text('Mark as Complete: '),
+                Checkbox(
+                  value: task.status == 'COMPLETED',
+                  onChanged: (bool? value) {
                     _toggleStatus(task);
                   },
-                  style: ElevatedButton.styleFrom(
-                    primary: task.status == 'IN_PROGRESS'
-                        ? Colors.red
-                        : Colors.green,
-                    onPrimary: Colors.white,
-                  ),
-                  child: Text(
-                    task.status == 'IN_PROGRESS' ? 'Complete' : 'In Progress',
-                    style: TextStyle(fontSize: 12),
-                  ),
                 ),
               ],
             ),
@@ -220,7 +247,8 @@ class _TodoListScreenState extends State<TodoListScreen> {
 
         return AlertDialog(
           title: Text('Add Task'),
-          content: Column(
+          content: SingleChildScrollView(
+              child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
@@ -301,7 +329,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
               //   ],
               // )
             ],
-          ),
+          )),
           actions: [
             TextButton(
               onPressed: () {
@@ -375,7 +403,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
                 ),
                 ListTile(
                   title: Text('Date'),
-                  subtitle: Text(createdAt.toLocal().toString()),
+                  subtitle: Text(_formatDate(createdAt)),
                   onTap: () async {
                     DateTime? pickedDate = await showDatePicker(
                       context: context,
@@ -446,6 +474,10 @@ class _TodoListScreenState extends State<TodoListScreen> {
         _saveTasks(); // Save tasks after modification
       });
     }
+  }
+
+  String _formatDate(DateTime dateTime) {
+    return DateFormat('MMMM d, yyyy hh:mm a').format(dateTime);
   }
 
   void _validateTaskFields(
