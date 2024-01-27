@@ -1,10 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 // import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'dart:convert';
 
 void main() {
   runApp(MyApp());
@@ -290,8 +292,16 @@ class _TodoListScreenState extends State<TodoListScreen> {
                       .pickImage(source: ImageSource.gallery);
 
                   if (pickedImage != null) {
+                    // Read the contents of the image file
+                    List<int> imageBytes =
+                        await File(pickedImage.path).readAsBytes();
+
+                    // Encode the image bytes to Base64
+                    String base64Image = base64Encode(imageBytes);
+
                     setState(() {
-                      image = pickedImage.path;
+                      // Store the Base64-encoded image string
+                      image = base64Image;
                     });
                   }
                 },
@@ -427,8 +437,16 @@ class _TodoListScreenState extends State<TodoListScreen> {
                         .pickImage(source: ImageSource.gallery);
 
                     if (pickedImage != null) {
+                      // Read the contents of the image file
+                      List<int> imageBytes =
+                          await File(pickedImage.path).readAsBytes();
+
+                      // Encode the image bytes to Base64
+                      String base64Image = base64Encode(imageBytes);
+
                       setState(() {
-                        image = pickedImage.path;
+                        // Store the Base64-encoded image string
+                        image = base64Image;
                       });
                     }
                   },
