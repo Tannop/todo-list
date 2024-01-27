@@ -241,7 +241,9 @@ class _TodoListScreenState extends State<TodoListScreen> {
         String id = Uuid().v4(); // Generate UUID
         String title = '';
         String description = '';
-        DateTime createdAt = DateTime.now();
+        // DateTime createdAt = DateTime.now();
+        DateTime createdAt = DateTime.now().toUtc();
+
         String image = '';
         String status = 'IN_PROGRESS';
 
@@ -476,8 +478,15 @@ class _TodoListScreenState extends State<TodoListScreen> {
     }
   }
 
+  // old date
+  // String _formatDate(DateTime dateTime) {
+  //   return DateFormat('MMMM d, yyyy hh:mm a').format(dateTime);
+  // }
   String _formatDate(DateTime dateTime) {
-    return DateFormat('MMMM d, yyyy hh:mm a').format(dateTime);
+    // Format the date in RFC3399 format with timezone
+    String formattedDate =
+        DateFormat('yyyy-MM-ddTHH:mm:ssZ').format(dateTime.toUtc());
+    return formattedDate;
   }
 
   void _validateTaskFields(
