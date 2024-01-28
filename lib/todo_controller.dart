@@ -1,24 +1,18 @@
-import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import 'dart:convert';
+import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'package:todo_list/task_model.dart';
 
-class TodoListController extends GetxController {
+class TodoController extends GetxController {
   var tasks = <Task>[].obs;
-  //var searchController = TextEditingController().obs;
-  var searchController = RxString('');
+  var searchController = TextEditingController().obs;
   var sortBy = 'Date'.obs;
-
-  @override
-  void onInit() {
-    super.onInit();
-    _loadTasks();
-  }
 
   void addTask(BuildContext context) {
     _addTaskLogic(context);
@@ -28,98 +22,41 @@ class TodoListController extends GetxController {
     _updateTaskLogic(context, task);
   }
 
-  void clearCompletedTasks() {
-    tasks.removeWhere((task) => task.status == 'COMPLETED');
-    _saveTasks();
-  }
-
-  List<Task> filterAndSortTasks() {
-    // Filter tasks based on the search query
-    String query = searchController.value.toLowerCase();
-    List<Task> filteredTasks = tasks
-        .where((task) =>
-            task.title.toLowerCase().contains(query) ||
-            task.description.toLowerCase().contains(query))
-        .toList();
-
-    // Sort tasks based on the selected sort option
-    switch (sortBy.value) {
-      case 'Title':
-        filteredTasks.sort((a, b) => a.title.compareTo(b.title));
-        break;
-      case 'Date':
-        filteredTasks.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-        break;
-      case 'Status':
-        filteredTasks.sort((a, b) => a.status.compareTo(b.status));
-        break;
-    }
-
-    return filteredTasks;
-  }
-
-  Future<void> _loadTasks() async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      List<String>? taskList = prefs.getStringList('tasks');
-
-      if (taskList != null) {
-        tasks.assignAll(taskList.map((taskJson) {
-          Map<String, dynamic> taskMap = json.decode(taskJson);
-          return Task(
-            id: taskMap['id'],
-            title: taskMap['title'],
-            description: taskMap['description'],
-            createdAt: DateTime.parse(taskMap['createdAt']),
-            image: taskMap['image'],
-            status: taskMap['status'],
-          );
-        }).toList());
-      }
-    } catch (e) {
-      _showErrorSnackBar('Error loading tasks');
-    }
-  }
-
-  void _saveTasks() async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      List<String> taskList = tasks
-          .map((task) => json.encode({
-                'id': task.id,
-                'title': task.title,
-                'description': task.description,
-                'createdAt': task.createdAt.toIso8601String(),
-                'image': task.image,
-                'status': task.status,
-              }))
-          .toList();
-      prefs.setStringList('tasks', taskList);
-    } catch (e) {
-      _showErrorSnackBar('Error saving tasks');
-    }
-  }
-
-  void _showErrorSnackBar(String message) {
-    Get.snackbar('Error', message, duration: Duration(seconds: 2));
-  }
-
-  void toggleStatus(Task task) {
+  void toggleTaskStatus(Task task) {
     task.status = task.status == 'IN_PROGRESS' ? 'COMPLETED' : 'IN_PROGRESS';
     _saveTasks();
   }
 
-  String _formatDate(DateTime dateTime) {
-    String formattedDate =
-        DateFormat('yyyy-MM-ddTHH:mm:ssZ').format(dateTime.toUtc());
-    return formattedDate;
+  void clearCompletedTasks() {
+    List<Task> completedTasks =
+        tasks.where((task) => task.status == 'COMPLETED').toList();
+
+    if (completedTasks.isEmpty) {
+      // Show a snackbar or a dialog indicating that there are no completed tasks
+      Get.snackbar('No Completed Tasks', 'There are no completed tasks. 😭',
+          snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+
+    // Show the clear confirmation dialog
+    Get.defaultDialog(
+      title: 'Clear Completed Tasks?',
+      middleText: 'Are you sure you want to clear all completed tasks?',
+      textConfirm: 'Clear',
+      confirm: ElevatedButton(
+        onPressed: () {
+          tasks.removeWhere((task) => task.status == 'COMPLETED');
+          _saveTasks(); // Save tasks after modification
+          Get.back(); // Close the dialog
+        },
+        child: Text('Clear'),
+      ),
+      textCancel: 'Cancel',
+    );
   }
 
-  void _validateTaskFields(
-      String title, DateTime createdAt, String status, String image) {
-    if (title.isEmpty || title.length > 100) {
-      throw 'Title must not be empty and should be less than 100 characters.';
-    }
+  void updateSearch(String value) {
+    searchController.value.text = value;
   }
 
   void _addTaskLogic(BuildContext context) async {
@@ -331,7 +268,44 @@ class TodoListController extends GetxController {
     }
   }
 
-  void updateSearch(String value) {
-    searchController.value = value;
+  void _validateTaskFields(
+      String title, DateTime createdAt, String status, String image) {
+    if (title.isEmpty || title.length > 100) {
+      throw 'Title must not be empty and should be less than 100 characters.';
+    }
+  }
+
+  void _saveTasks() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      List<String> taskList = tasks
+          .map((task) => json.encode({
+                'id': task.id,
+                'title': task.title,
+                'description': task.description,
+                'createdAt': task.createdAt.toIso8601String(),
+                'image': task.image,
+                'status': task.status,
+              }))
+          .toList();
+      prefs.setStringList('tasks', taskList);
+    } catch (e) {
+      _showErrorSnackBar('Error saving tasks');
+    }
+  }
+
+  void toggleStatus(Task task) {
+    task.status = task.status == 'IN_PROGRESS' ? 'COMPLETED' : 'IN_PROGRESS';
+    _saveTasks();
+  }
+
+  void _showErrorSnackBar(String message) {
+    Get.snackbar('Error', message, duration: Duration(seconds: 2));
+  }
+
+  String _formatDate(DateTime dateTime) {
+    String formattedDate =
+        DateFormat('yyyy-MM-dd HH:mm').format(dateTime.toUtc());
+    return formattedDate;
   }
 }

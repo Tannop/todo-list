@@ -67,9 +67,10 @@ class TodoListScreen extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: TextField(
-        controller: taskController.searchController.value,
+        controller:
+            TextEditingController(text: taskController.searchController.value),
         onChanged: (value) {
-          taskController.searchController.value.text = value;
+          taskController.updateSearch(value);
         },
         decoration: InputDecoration(
           labelText: 'Search by Title or Description',
@@ -131,9 +132,5 @@ class TodoListScreen extends StatelessWidget {
         );
       },
     );
-  }
-
-  void _clearCompletedTasks(BuildContext context) {
-    taskController.clearCompletedTasks();
   }
 }
