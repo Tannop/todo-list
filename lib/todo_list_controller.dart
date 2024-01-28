@@ -138,6 +138,7 @@ class TodoListController extends GetxController {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
+                key: Key('addTaskTitleTextField'),
                 maxLength: 100,
                 decoration: InputDecoration(labelText: 'Title'),
                 onChanged: (value) {
@@ -145,6 +146,7 @@ class TodoListController extends GetxController {
                 },
               ),
               TextField(
+                key: Key('addTaskDescriptionTextField'),
                 decoration: InputDecoration(labelText: 'Description'),
                 onChanged: (value) {
                   description = value;
@@ -271,6 +273,7 @@ class TodoListController extends GetxController {
                   },
                 ),
                 ListTile(
+                  key: Key('checkBox'),
                   title: const Text('Mark as Complete'),
                   trailing: Obx(
                     () => Checkbox(
@@ -312,6 +315,7 @@ class TodoListController extends GetxController {
               child: Text('Cancel'),
             ),
             TextButton(
+              key: Key('updateButton'),
               onPressed: () {
                 try {
                   _validateTaskFields(title, createdAt, status, image);
