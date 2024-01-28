@@ -12,7 +12,7 @@ class TodoListController extends GetxController {
   var tasks = <Task>[].obs;
   //var searchController = TextEditingController().obs;
   var searchController = RxString('');
-  var sortBy = 'Date'.obs;
+  var sortBy = RxString('Date');
 
   @override
   void onInit() {
@@ -34,7 +34,6 @@ class TodoListController extends GetxController {
   }
 
   List<Task> filterAndSortTasks() {
-    // Filter tasks based on the search query
     String query = searchController.value.toLowerCase();
     List<Task> filteredTasks = tasks
         .where((task) =>
@@ -42,7 +41,6 @@ class TodoListController extends GetxController {
             task.description.toLowerCase().contains(query))
         .toList();
 
-    // Sort tasks based on the selected sort option
     switch (sortBy.value) {
       case 'Title':
         filteredTasks.sort((a, b) => a.title.compareTo(b.title));
@@ -234,7 +232,7 @@ class TodoListController extends GetxController {
         DateTime createdAt = task.createdAt;
         String image = task.image;
         String status = task.status;
-
+        RxString statusupdate = RxString(task.status);
         return AlertDialog(
           title: Text('Update Task'),
           content: SingleChildScrollView(
@@ -271,6 +269,19 @@ class TodoListController extends GetxController {
                       createdAt = pickedDate;
                     }
                   },
+                ),
+                ListTile(
+                  title: const Text('Mark as Complete'),
+                  trailing: Obx(
+                    () => Checkbox(
+                      value: statusupdate.value == 'COMPLETED',
+                      onChanged: (bool? value) {
+                        statusupdate.value =
+                            value! ? 'COMPLETED' : 'IN_PROGRESS';
+                        status = statusupdate.value;
+                      },
+                    ),
+                  ),
                 ),
                 ElevatedButton(
                   onPressed: () async {
@@ -333,5 +344,9 @@ class TodoListController extends GetxController {
 
   void updateSearch(String value) {
     searchController.value = value;
+  }
+
+  void updatesort(String value) {
+    sortBy.value = value;
   }
 }

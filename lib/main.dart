@@ -28,7 +28,7 @@ class TodoListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('To-Do List'),
+        title: const Text('To-Do List'),
       ),
       body: Column(
         children: [
@@ -47,13 +47,13 @@ class TodoListScreen extends StatelessWidget {
                   onPressed: () {
                     taskController.addTask(context);
                   },
-                  child: Text('Add Task'),
+                  child: const Text('Add Task'),
                 ),
                 ElevatedButton(
                   onPressed: () {
                     taskController.clearCompletedTasks();
                   },
-                  child: Text('Clear Completed'),
+                  child: const Text('Clear Completed'),
                 ),
               ],
             ),
@@ -72,7 +72,7 @@ class TodoListScreen extends StatelessWidget {
         onChanged: (value) {
           taskController.updateSearch(value);
         },
-        decoration: InputDecoration(
+        decoration: const InputDecoration(
           labelText: 'Search by Title or Description',
           prefixIcon: Icon(Icons.search),
         ),
@@ -86,19 +86,21 @@ class TodoListScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          Text('Sort By: '),
-          DropdownButton<String>(
-            value: taskController.sortBy.value,
-            onChanged: (value) {
-              taskController.sortBy.value = value!;
-            },
-            items: ['Title', 'Date', 'Status']
-                .map((sortOption) => DropdownMenuItem<String>(
-                      value: sortOption,
-                      child: Text(sortOption),
-                    ))
-                .toList(),
-          ),
+          const Text('Sort By: '),
+          Obx(() => DropdownButton<String>(
+                value: taskController.sortBy.value,
+                onChanged: (String? value) {
+                  if (value != null) {
+                    taskController.sortBy.value = value;
+                  }
+                },
+                items: ['Title', 'Date', 'Status']
+                    .map((sortOption) => DropdownMenuItem<String>(
+                          value: sortOption,
+                          child: Text(sortOption),
+                        ))
+                    .toList(),
+              )),
         ],
       ),
     );
@@ -112,20 +114,16 @@ class TodoListScreen extends StatelessWidget {
         return Card(
           child: ListTile(
             title: Text(task.title),
-            subtitle: Text(task.description),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Mark as Complete: '),
-                Checkbox(
-                  value: task.status == 'COMPLETED',
-                  onChanged: (bool? value) {
-                    taskController.toggleStatus(task);
-                  },
-                ),
+                Text(task.description),
+                const SizedBox(height: 8), // Adjust spacing as needed
+                Text('Status: ${task.status}'),
               ],
             ),
             onTap: () {
+              //print("This is the id: " + task.id);
               taskController.updateTask(context, task);
             },
           ),
