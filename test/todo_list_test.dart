@@ -56,6 +56,25 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Task 1'), isNot('Task 1'));
   });
+
+  testWidgets('Search bar  Test', (WidgetTester tester) async {
+    await _buildAndVerifyEmptyList(tester);
+
+    await _enterTaskDetailsAndTapAdd(tester, 'Search 1', 'Description 1');
+    await _enterTaskDetailsAndTapAdd(tester, 'Search 2', 'Description 2');
+    await _enterTaskDetailsAndTapAdd(tester, 'Search 3', 'Description 3');
+
+    // Search for task Search 1
+    await tester.enterText(find.byKey(const Key('searchBar')), 'Search 1');
+
+    expect(find.text('Search 1'), findsAtLeast(1));
+    await tester.pumpAndSettle();
+
+    // Search for Description 3
+    await tester.enterText(find.byKey(const Key('searchBar')), 'Description 3');
+    await tester.pumpAndSettle();
+    expect(find.text('Description 3'), findsAtLeast(1));
+  });
 }
 
 Future<void> _buildAndVerifyEmptyList(WidgetTester tester) async {

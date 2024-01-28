@@ -49,6 +49,7 @@ class TodoListScreen extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: TextField(
+        key: const Key('searchBar'),
         controller:
             TextEditingController(text: taskController.searchController.value),
         onChanged: (value) {
