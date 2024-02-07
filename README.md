@@ -1,11 +1,12 @@
 #Todo List
+
 Created by Tannop Sangvanloy
 ---------------------------------------------
 Contact
 - Linkedin: https://www.linkedin.com/in/tannop/
 - Email: Tannop_poh@hotmail.com
 ---------------------------------------------
-Specs
+#Specs
 https://github.com/HugemanConsultant/tech-exam-software-engineering
 - Task info: ID, Title, Description, Date, Image, Status
 - Used State Management by GetX
